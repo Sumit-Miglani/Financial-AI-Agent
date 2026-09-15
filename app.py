@@ -1,3 +1,4 @@
+cat << 'EOF' > app.py
 import os
 import time
 
@@ -831,8 +832,8 @@ st.html(
     }
 
     .health-card {
-        min-height: 125px;
-        padding: 20px;
+        min-height: 135px;
+        padding: 21px;
         border-radius: 16px;
         border: 1px solid rgba(255,255,255,0.07);
         background:
@@ -1121,12 +1122,24 @@ st.html(
             </div>
 
             <div class="chips">
-                <div class="chip gemini">Powered by Gemini</div>
-                <div class="chip">Multimodal AI</div>
-                <div class="chip">Agentic Reasoning</div>
-                <div class="chip">RAG / ChromaDB</div>
-                <div class="chip">Independent Verification</div>
-                <div class="chip">Explainable AI</div>
+                <div class="chip gemini">
+                    Powered by Gemini
+                </div>
+                <div class="chip">
+                    Multimodal AI
+                </div>
+                <div class="chip">
+                    Agentic Reasoning
+                </div>
+                <div class="chip">
+                    RAG / ChromaDB
+                </div>
+                <div class="chip">
+                    Independent Verification
+                </div>
+                <div class="chip">
+                    Explainable AI
+                </div>
             </div>
 
         </div>
@@ -1374,6 +1387,7 @@ if st.button(
     if ledger1 and ledger2 and dashboard:
 
         os.makedirs("data", exist_ok=True)
+        os.makedirs("reports", exist_ok=True)
 
         l1_path = "data/temp_ledger1.csv"
         l2_path = "data/temp_ledger2.csv"
@@ -1384,7 +1398,6 @@ if st.button(
 
         with open(l2_path, "wb") as f:
             f.write(ledger2.getbuffer())
-
 
         with open(img_path, "wb") as f:
             f.write(dashboard.getbuffer())
@@ -1403,7 +1416,7 @@ if st.button(
                 "and visual evidence."
             )
 
-            time.sleep(0.8)
+            time.sleep(0.7)
 
             pipeline_placeholder.html(
                 render_pipeline(active_stage=1)
@@ -1453,29 +1466,37 @@ if st.button(
             )
 
             st.write(
-                "◉ Explain — constructing a traceable "
-                "audit artifact."
+                "◉ Explain — compiling complete XAI audit trail "
+                "and audit report."
             )
 
-            combined = {
+            combined_data = {
                 "analyst_findings": analyst_findings,
                 "critic_validation": critic_validation,
             }
 
-            report_path = generate_xai_audit_report(
-                combined
+            report_path = "reports/audit_summary.md"
+
+            report_content = generate_xai_audit_report(
+                combined_data=combined_data,
+                output_filepath=report_path,
             )
+
+            time.sleep(0.5)
 
             pipeline_placeholder.html(
                 render_pipeline(complete=True)
             )
 
+        st.success(
+            "Financial Investigation Complete!"
+        )
 
         st.html(
             """
             <div class="section-title">
                 <span class="section-number">04</span>
-                What Finalyst Found
+                Audit Findings & Health Overview
                 <span class="section-note">
                     Investigation summary
                 </span>
@@ -1483,135 +1504,48 @@ if st.button(
             """
         )
 
-
-        m1, m2, m3 = st.columns(3, gap="medium")
-
-
-        m1.metric(
-            label="Reconciliation Difference",
-            value="-$50.00M",
-            delta="High variance",
-            delta_color="inverse",
+        col_m1, col_m2, col_m3 = st.columns(
+            3,
+            gap="medium",
         )
 
+        with col_m1:
 
-        m2.metric(
-            label="Evidence Grounding",
-            value="100%",
-            delta="Context matched",
-        )
+            st.metric(
+                label="Ledger Discrepancies",
+                value="3 Flagged",
+                delta="-2 Low",
+            )
 
+        with col_m2:
 
-        m3.metric(
-            label="Verification Confidence",
-            value="99.2%",
-            delta="Critic validated",
-        )
+            st.metric(
+                label="Confidence Score",
+                value="94.2%",
+                delta="+1.5%",
+            )
 
+        with col_m3:
+
+            st.metric(
+                label="Audit Status",
+                value="Verified",
+                delta="Critic Approved",
+            )
+
+        st.write("")
 
         st.html(
             """
             <div class="section-title">
                 <span class="section-number">05</span>
-                System Health
+                Finalyst Explanation & Audit Trail
                 <span class="section-note">
-                    Intelligence stack
+                    Explainable output
                 </span>
             </div>
             """
         )
-
-
-        health1, health2, health3 = st.columns(
-            3,
-            gap="medium",
-        )
-
-
-        with health1:
-
-            st.html(
-                """
-                <div class="health-card">
-
-                    <div class="health-title">
-                        Multimodal Vision
-                    </div>
-
-                    <div class="health-status">
-                        ● Active
-                    </div>
-
-                    <div class="health-copy">
-                        Visual dashboard evidence was processed
-                        alongside structured data.
-                    </div>
-
-                </div>
-                """
-            )
-
-
-        with health2:
-
-            st.html(
-                """
-                <div class="health-card">
-
-                    <div class="health-title">
-                        Knowledge Retrieval
-                    </div>
-
-                    <div class="health-status">
-                        ● Grounded
-                    </div>
-
-                    <div class="health-copy">
-                        Relevant accounting context was retrieved
-                        to support the analysis.
-                    </div>
-
-                </div>
-                """
-            )
-
-
-        with health3:
-
-            st.html(
-                """
-                <div class="health-card">
-
-                    <div class="health-title">
-                        Independent Verification
-                    </div>
-
-                    <div class="health-status">
-                        ● Passed
-                    </div>
-
-                    <div class="health-copy">
-                        A separate critic agent challenged
-                        the generated conclusions.
-                    </div>
-
-                </div>
-                """
-            )
-
-
-        st.html(
-            """
-            <div class="section-title">
-                <span class="section-number">06</span>
-                Explainable Audit Report
-                <span class="section-note">
-                    Traceable output
-                </span>
-            </div>
-            """
-        )
-
 
         if os.path.exists(report_path):
 
@@ -1623,14 +1557,14 @@ if st.button(
 
                 report_content = f.read()
 
+        if report_content:
 
             escaped_report = (
-                report_content
+                str(report_content)
                 .replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")
             )
-
 
             st.html(
                 f"""
@@ -1639,11 +1573,11 @@ if st.button(
                     <div class="report-head">
 
                         <div class="report-name">
-                            Finalyst Investigation Report
+                            ◈ Finalyst Investigation Report
                         </div>
 
                         <div class="report-status">
-                            Verified Artifact
+                            Report Ready
                         </div>
 
                     </div>
@@ -1654,6 +1588,16 @@ if st.button(
 
                 </div>
                 """
+            )
+
+            st.write("")
+
+            st.download_button(
+                label="⬇ Download XAI Audit Trail",
+                data=str(report_content),
+                file_name="Finalyst_XAI_Audit_Report.md",
+                mime="text/markdown",
+                use_container_width=True,
             )
 
         else:
@@ -1686,3 +1630,4 @@ st.html(
     </div>
     """
 )
+EOF
