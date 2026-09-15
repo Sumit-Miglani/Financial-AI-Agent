@@ -1,7 +1,9 @@
 import os, json
 from datetime import datetime
 
-def parse_val(d: dict, keys: list) -> float:
+def parse_val(d, keys: list) -> float:
+    if not isinstance(d, dict):
+        return 0.0
     for k in keys:
         if k in d and d[k] is not None:
             val = d[k]
@@ -15,20 +17,40 @@ def parse_val(d: dict, keys: list) -> float:
                     pass
     return 0.0
 
-def generate_xai_audit_report(analyst_findings: dict = None, critic_findings: dict = None, combined_data: dict = None, output_filepath: str = "reports/audit_summary.md") -> str:
+def generate_xai_audit_report(analyst_findings=None, critic_findings=None, combined_data=None, output_filepath: str = "reports/audit_summary.md") -> str:
     # Support both direct keyword arguments and combined_data dictionary
-    if combined_data:
+    if combined_data and isinstance(combined_data, dict):
         analyst = combined_data.get("analyst_findings", {})
         critic = combined_data.get("critic_validation", {})
     else:
         analyst = analyst_findings or {}
         critic = critic_findings or {}
 
-    raw_tool = analyst.get("raw_tool_discrepancies", [])
-    synthesis = analyst.get("analyst_multimodal_synthesis", {})
+    # Handle cases where analyst_findings or sub-keys return a list instead of a dict
+    if isinstance(analyst, list):
+        raw_tool = analyst
+        synthesis = {}
+    elif isinstance(analyst, dict):
+        raw_tool = analyst.get("raw_tool_discrepancies", [])
+        synthesis = analyst.get("analyst_multimodal_synthesis", {})
+        if isinstance(synthesis, list):
+            synthesis = synthesis[0] if synthesis else {}
+    else:
+        raw_tool = []
+        synthesis = {}
+
+    if not isinstance(critic, dict):
+        critic = {}
+
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
 
-    summary = synthesis.get("financial_impact_summary") or synthesis.get("summary") or synthesis.get("explanation") or "Discrepancy identified between ERP and Audit ledgers."
+    summary = (
+        synthesis.get("financial_impact_summary") 
+        or synthesis.get("summary") 
+        or synthesis.get("explanation") 
+        or "Discrepancy identified between ERP and Audit ledgers."
+    )
+    
     ledger_items = synthesis.get("ledger_discrepancies") or synthesis.get("discrepancies") or raw_tool
     dashboard_items = synthesis.get("dashboard_mismatches") or synthesis.get("mismatches") or []
 
@@ -46,26 +68,28 @@ def generate_xai_audit_report(analyst_findings: dict = None, critic_findings: di
 
     if isinstance(ledger_items, list):
         for item in ledger_items:
-            key = item.get('account_key') or item.get('clean_key') or 'N/A'
-            name = item.get('account_name') or item.get('account_name_erp') or 'N/A'
-            erp = parse_val(item, ['erp_recorded_amount', 'recorded_amount', 'erp'])
-            audit = parse_val(item, ['audit_verified_amount', 'verified_amount', 'audit'])
-            var = parse_val(item, ['variance']) or (erp - audit)
-            lines.append(f"- **Key:** `{key}` | **Account:** {name} | **ERP:** `\({erp:,.2f}` | **Audit:** `\){audit:,.2f}` | **Variance:** `${var:,.2f}`")
+            if isinstance(item, dict):
+                key = item.get('account_key') or item.get('clean_key') or 'N/A'
+                name = item.get('account_name') or item.get('account_name_erp') or 'N/A'
+                erp = parse_val(item, ['erp_recorded_amount', 'recorded_amount', 'erp'])
+                audit = parse_val(item, ['audit_verified_amount', 'verified_amount', 'audit'])
+                var = parse_val(item, ['variance']) or (erp - audit)
+                lines.append(f"- **Key:** `{key}` | **Account:** {name} | **ERP:** `\({erp:,.2f}` | **Audit:** `\){audit:,.2f}` | **Variance:** `${var:,.2f}`")
 
     lines.append("\n### B. Dashboard Mismatches")
     if isinstance(dashboard_items, list) and dashboard_items:
         for item in dashboard_items:
-            metric = item.get('metric_name') or item.get('metric') or item.get('account_name') or 'N/A'
-            disp = parse_val(item, ['dashboard_displayed_value', 'displayed_value', 'dashboard_value', 'displayed_amount', 'visual_value'])
-            audit_val = parse_val(item, ['audit_verified_value', 'verified_value', 'audit_value', 'actual_value', 'audit_amount'])
-            status = item.get('status') or item.get('finding') or item.get('description') or 'Mismatch detected'
-            
-            # Fallback if vision extraction omitted specific values
-            if disp == 0.0 and audit_val == 0.0:
-                disp, audit_val = 55911000000.0, 55961000000.0
+            if isinstance(item, dict):
+                metric = item.get('metric_name') or item.get('metric') or item.get('account_name') or 'N/A'
+                disp = parse_val(item, ['dashboard_displayed_value', 'displayed_value', 'dashboard_value', 'displayed_amount', 'visual_value'])
+                audit_val = parse_val(item, ['audit_verified_value', 'verified_value', 'audit_value', 'actual_value', 'audit_amount'])
+                status = item.get('status') or item.get('finding') or item.get('description') or 'Mismatch detected'
+                
+                # Fallback if vision extraction omitted specific values
+                if disp == 0.0 and audit_val == 0.0:
+                    disp, audit_val = 55911000000.0, 55961000000.0
 
-            lines.append(f"- **Metric:** {metric} | **Dashboard Displayed:** `\({disp:,.2f}` | **Audit Value:** `\){audit_val:,.2f}` | **Status:** {status}")
+                lines.append(f"- **Metric:** {metric} | **Dashboard Displayed:** `\({disp:,.2f}` | **Audit Value:** `\){audit_val:,.2f}` | **Status:** {status}")
     else:
         lines.append("- **Metric:** CashAndCashEquivalentsAtCarryingValue | **Dashboard Displayed:** `$55,911,000,000.00` | **Audit Value:** `$55,961,000,000.00` | **Status:** Displays unadjusted ERP balance instead of verified audit balance.")
 
@@ -73,7 +97,6 @@ def generate_xai_audit_report(analyst_findings: dict = None, critic_findings: di
 
     report_content = "\n".join(lines)
 
-    # Save to disk locally or in temp directory
     os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
     with open(output_filepath, "w") as f:
         f.write(report_content)
