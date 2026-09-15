@@ -13,6 +13,6 @@ COPY . .
 ENV PORT=10000
 ENV PYTHONPATH=.
 
-# Expose port and start Functions Framework
+# Expose port and start Streamlit app
 EXPOSE 10000
-CMD ["python3", "-m", "functions_framework", "--target=audit_pipeline", "--source=main.py", "--port=10000"]
+CMD ["streamlit", "run", "app.py", "--server.port=10000", "--server.address=0.0.0.0"]
