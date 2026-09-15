@@ -15,13 +15,17 @@ def parse_val(d: dict, keys: list) -> float:
                     pass
     return 0.0
 
-def generate_xai_audit_report(combined_data: dict, output_filepath: str = "reports/audit_summary.md") -> str:
-    os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
-    
-    analyst = combined_data.get("analyst_findings", {})
+def generate_xai_audit_report(analyst_findings: dict = None, critic_findings: dict = None, combined_data: dict = None, output_filepath: str = "reports/audit_summary.md") -> str:
+    # Support both direct keyword arguments and combined_data dictionary
+    if combined_data:
+        analyst = combined_data.get("analyst_findings", {})
+        critic = combined_data.get("critic_validation", {})
+    else:
+        analyst = analyst_findings or {}
+        critic = critic_findings or {}
+
     raw_tool = analyst.get("raw_tool_discrepancies", [])
     synthesis = analyst.get("analyst_multimodal_synthesis", {})
-    critic = combined_data.get("critic_validation", {})
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
 
     summary = synthesis.get("financial_impact_summary") or synthesis.get("summary") or synthesis.get("explanation") or "Discrepancy identified between ERP and Audit ledgers."
@@ -67,11 +71,15 @@ def generate_xai_audit_report(combined_data: dict, output_filepath: str = "repor
 
     lines.append("\n---\n*Generated automatically by Multi-Agent Financial AI Recon Pipeline.*")
 
+    report_content = "\n".join(lines)
+
+    # Save to disk locally or in temp directory
+    os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
     with open(output_filepath, "w") as f:
-        f.write("\n".join(lines))
+        f.write(report_content)
 
     print(f" [XAI Logger] Audit report saved to {output_filepath}")
-    return output_filepath
+    return report_content
 
 if __name__ == "__main__":
     from critic import run_critic_agent
@@ -79,4 +87,4 @@ if __name__ == "__main__":
     
     analyst_results = run_analyst_agent("data/financial_1.csv", "data/financial_2.csv", "data/dashboard_bi.png")
     critic_results = run_critic_agent(analyst_results)
-    generate_xai_audit_report({"analyst_findings": analyst_results, "critic_validation": critic_results})
+    generate_xai_audit_report(analyst_findings=analyst_results, critic_findings=critic_results)

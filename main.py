@@ -11,7 +11,7 @@ from src.logger import generate_xai_audit_report
 @functions_framework.http
 def audit_pipeline(request):
     if request.method != "POST":
-        return jsonify({"error": "Only POST requests are accepted."}), 455
+        return jsonify({"error": "Only POST requests are accepted."}), 405
 
     if "ledger1" not in request.files or "ledger2" not in request.files or "dashboard" not in request.files:
         return jsonify({
@@ -38,7 +38,9 @@ def audit_pipeline(request):
                 image_path=img_path
             )
             critic_findings = run_critic_agent(analyst_findings)
-            audit_report = generate_xai_audit_report(
+            
+            # Pass individual findings directly into updated logger signature
+            audit_report_text = generate_xai_audit_report(
                 analyst_findings=analyst_findings,
                 critic_findings=critic_findings
             )
@@ -47,7 +49,7 @@ def audit_pipeline(request):
                 "status": "success",
                 "analyst_findings": analyst_findings,
                 "critic_findings": critic_findings,
-                "audit_report": audit_report
+                "audit_report": audit_report_text
             }), 200
 
         except Exception as e:
