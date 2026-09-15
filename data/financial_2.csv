@@ -1,0 +1,6 @@
+ledger_key,account_name,verified_amount
+ACC1001,Assets,921983000000.0
+ACC1002,Liabilities,281503000000.0
+ACC1003,StockholdersEquity,640480000000.0
+ACC1004,CashAndCashEquivalentsAtCarryingValue,55961000000.0
+ACC1005,PropertyPlantAndEquipmentNet,185062000000.0

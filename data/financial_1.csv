@@ -1,0 +1,6 @@
+ledger_key,account_name,recorded_amount
+ACC1001GTO,Assets,921983000000.0
+ACC1002GTO,Liabilities,281503000000.0
+ACC1003GTO,StockholdersEquity,640480000000.0
+ACC1004GTO,CashAndCashEquivalentsAtCarryingValue,55911000000.0
+ACC1005GTO,PropertyPlantAndEquipmentNet,185062000000.0
