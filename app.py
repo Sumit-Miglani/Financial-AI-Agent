@@ -1,4 +1,3 @@
-cat << 'EOF' > app.py
 import os
 import time
 
@@ -1630,4 +1629,3 @@ st.html(
     </div>
     """
 )
-EOF
