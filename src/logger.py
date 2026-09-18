@@ -3,6 +3,8 @@ import io
 import json
 import pandas as pd
 from datetime import datetime
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 
 
 def parse_val(d, keys: list) -> float:
@@ -24,8 +26,7 @@ def parse_val(d, keys: list) -> float:
 
 def extract_audit_tables(analyst_findings=None, critic_findings=None, combined_data=None):
     """
-    Parses multi-agent outputs into structured Pandas DataFrames for interactive 
-    web tables and Excel generation.
+    Parses agent findings into 3 structured Pandas DataFrames.
     """
     if combined_data and isinstance(combined_data, dict):
         analyst = combined_data.get("analyst_findings", {})
@@ -58,17 +59,17 @@ def extract_audit_tables(analyst_findings=None, critic_findings=None, combined_d
         or "Discrepancy identified between ERP and Audit ledgers."
     )
 
-    # 1. Executive Summary Table
+    # Tab 1: Executive Summary Data
     df_summary = pd.DataFrame([{
         "Execution Timestamp": timestamp,
         "Audit Status": critic.get("audit_status", "APPROVED"),
-        "Risk Assessment Level": critic.get("risk_severity", "HIGH"),
-        "Math Accuracy Verified": critic.get("math_accuracy_verified", True),
+        "Risk Severity": critic.get("risk_severity", "HIGH"),
+        "Math Verified": critic.get("math_accuracy_verified", True),
         "Executive Summary": summary_text,
         "Critic Evaluation": critic.get("critic_comments", "Validation completed successfully.")
     }])
 
-    # 2. Reconciled Ledger Variances Table
+    # Tab 2: Reconciled Ledger Variances Data
     ledger_items = synthesis.get("ledger_discrepancies") or synthesis.get("discrepancies") or raw_tool
     ledger_rows = []
 
@@ -90,7 +91,7 @@ def extract_audit_tables(analyst_findings=None, critic_findings=None, combined_d
                 })
     df_ledger = pd.DataFrame(ledger_rows)
 
-    # 3. Dashboard Mismatches Table
+    # Tab 3: Dashboard Mismatches Data
     dashboard_items = synthesis.get("dashboard_mismatches") or synthesis.get("mismatches") or []
     dashboard_rows = []
 
@@ -123,21 +124,73 @@ def extract_audit_tables(analyst_findings=None, critic_findings=None, combined_d
     return df_summary, df_ledger, df_dashboard
 
 
+def style_excel_worksheet(ws, df):
+    """Applies corporate styling, column width auto-fitting, text wrapping, and currency formatting."""
+    header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")  # Corporate Navy Blue
+    header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+    data_font = Font(name="Calibri", size=10)
+    
+    thin_border = Border(
+        left=Side(style='thin', color='D9D9D9'),
+        right=Side(style='thin', color='D9D9D9'),
+        top=Side(style='thin', color='D9D9D9'),
+        bottom=Side(style='thin', color='D9D9D9')
+    )
+
+    # 1. Format Header Row
+    for col_idx in range(1, len(df.columns) + 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    # 2. Format Data Cells and Auto-Fit Columns
+    for col_idx, col_name in enumerate(df.columns, 1):
+        max_len = len(str(col_name))
+        
+        for row_idx in range(2, len(df) + 2):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            cell.font = data_font
+            cell.border = thin_border
+            
+            # Wrap long narrative text
+            if col_name in ["Executive Summary", "Critic Evaluation", "Finding / Status"]:
+                cell.alignment = Alignment(wrap_text=True, vertical="top", horizontal="left")
+                ws.row_dimensions[row_idx].height = 50  # Expand row height
+                max_len = 45
+            else:
+                cell.alignment = Alignment(vertical="center", horizontal="left")
+                max_len = max(max_len, len(str(cell.value or '')))
+
+            # Explicit currency number formatting
+            if "($)" in col_name or "Recorded" in col_name or "Verified" in col_name or "Variance" in col_name:
+                cell.number_format = '$#,##0.00'
+                cell.alignment = Alignment(vertical="center", horizontal="right")
+
+        col_letter = get_column_letter(col_idx)
+        ws.column_dimensions[col_letter].width = max(max_len + 4, 15)
+
+
 def generate_excel_bytes(df_summary: pd.DataFrame, df_ledger: pd.DataFrame, df_dashboard: pd.DataFrame) -> bytes:
-    """Generates an in-memory multi-sheet Excel file (.xlsx) from DataFrames."""
+    """Generates an in-memory 3-tab styled Excel workbook (.xlsx)."""
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df_summary.to_excel(writer, sheet_name='Audit Summary', index=False)
+        # Tab 1
+        df_summary.to_excel(writer, sheet_name='Executive Summary', index=False)
+        style_excel_worksheet(writer.sheets['Executive Summary'], df_summary)
+
+        # Tab 2
         df_ledger.to_excel(writer, sheet_name='Ledger Variances', index=False)
+        style_excel_worksheet(writer.sheets['Ledger Variances'], df_ledger)
+
+        # Tab 3
         df_dashboard.to_excel(writer, sheet_name='Dashboard Mismatches', index=False)
+        style_excel_worksheet(writer.sheets['Dashboard Mismatches'], df_dashboard)
+
     return output.getvalue()
 
 
 def generate_xai_audit_report(analyst_findings=None, critic_findings=None, combined_data=None, output_filepath: str = "reports/audit_summary.xlsx"):
-    """
-    Backwards-compatible logger function. Generates tables, writes the .xlsx file to disk, 
-    and returns both the binary excel content and the DataFrames tuple.
-    """
     df_summary, df_ledger, df_dashboard = extract_audit_tables(analyst_findings, critic_findings, combined_data)
     excel_bytes = generate_excel_bytes(df_summary, df_ledger, df_dashboard)
 
@@ -148,7 +201,7 @@ def generate_xai_audit_report(analyst_findings=None, critic_findings=None, combi
     with open(output_filepath, "wb") as f:
         f.write(excel_bytes)
 
-    print(f" [XAI Logger] Audit Excel report saved to {output_filepath}")
+    print(f" [XAI Logger] Formatted 3-Tab Audit Excel report saved to {output_filepath}")
     return excel_bytes, (df_summary, df_ledger, df_dashboard)
 
 

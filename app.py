@@ -857,7 +857,7 @@ st.html(
 
     .table-heading {
         margin-top: 18px;
-        margin-bottom: 10px;
+        margin-bottom: 7px;
         color: #E5EAF0;
         font-family: 'Space Grotesk', sans-serif;
         font-size: 14px;
@@ -865,10 +865,10 @@ st.html(
     }
 
     .table-caption {
-        margin-top: -2px;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
         color: #758091;
         font-size: 10px;
+        line-height: 1.5;
     }
 
     .health-card {
@@ -916,8 +916,8 @@ st.html(
     }
 
     .download-area {
-        padding: 20px;
         margin-top: 20px;
+        padding: 21px;
         border-radius: 17px;
         border: 1px solid rgba(255,255,255,0.07);
         background:
@@ -1918,191 +1918,224 @@ if st.button(
                 <span class="section-number">06</span>
                 Explainable Audit Report
                 <span class="section-note">
-                    Interactive financial tables
+                    Interactive audit workbook
                 </span>
             </div>
             """
         )
 
-        try:
+        if analyst_findings and critic_validation:
 
-            df_summary, df_ledger, df_dashboard = (
-                extract_audit_tables(
-                    analyst_findings,
-                    critic_validation,
-                )
-            )
+            try:
 
-        except Exception as exc:
-
-            st.error(
-                f"Finalyst could not extract the audit tables: {exc}"
-            )
-
-            df_summary = None
-            df_ledger = None
-            df_dashboard = None
-
-        if (
-            df_summary is not None
-            and df_ledger is not None
-            and df_dashboard is not None
-        ):
-
-            st.markdown(
-                '<div class="table-heading">'
-                '📑 Audit Executive Summary'
-                '</div>',
-                unsafe_allow_html=True,
-            )
-
-            st.markdown(
-                '<div class="table-caption">'
-                'A structured overview of the completed investigation.'
-                '</div>',
-                unsafe_allow_html=True,
-            )
-
-            st.dataframe(
-                df_summary,
-                use_container_width=True,
-                hide_index=True,
-            )
-
-            st.markdown(
-                '<div class="table-heading">'
-                '📊 Reconciled Ledger Variances'
-                '</div>',
-                unsafe_allow_html=True,
-            )
-
-            st.markdown(
-                '<div class="table-caption">'
-                'Transaction-level differences identified during reconciliation.'
-                '</div>',
-                unsafe_allow_html=True,
-            )
-
-            ledger_style_format = {}
-
-            if "ERP Recorded ($)" in df_ledger.columns:
-                ledger_style_format["ERP Recorded ($)"] = "${:,.2f}"
-
-            if "Audit Verified ($)" in df_ledger.columns:
-                ledger_style_format["Audit Verified ($)"] = "${:,.2f}"
-
-            if "Variance ($)" in df_ledger.columns:
-                ledger_style_format["Variance ($)"] = "${:,.2f}"
-
-            if ledger_style_format:
-
-                st.dataframe(
-                    df_ledger.style.format(
-                        ledger_style_format
-                    ),
-                    use_container_width=True,
-                    hide_index=True,
+                df_summary, df_ledger, df_dashboard = (
+                    extract_audit_tables(
+                        analyst_findings,
+                        critic_validation,
+                    )
                 )
 
-            else:
+                tab1, tab2, tab3 = st.tabs(
+                    [
+                        "📑 Executive Summary",
+                        "📊 Ledger Variances",
+                        "🖥️ Dashboard Mismatches",
+                    ]
+                )
 
-                st.dataframe(
+                with tab1:
+
+                    st.markdown(
+                        '<div class="table-heading">'
+                        'Executive Summary'
+                        '</div>',
+                        unsafe_allow_html=True,
+                    )
+
+                    st.markdown(
+                        '<div class="table-caption">'
+                        'High-level summary of the Finalyst investigation.'
+                        '</div>',
+                        unsafe_allow_html=True,
+                    )
+
+                    st.dataframe(
+                        df_summary,
+                        use_container_width=True,
+                        hide_index=True,
+                    )
+
+                with tab2:
+
+                    st.markdown(
+                        '<div class="table-heading">'
+                        'Reconciled Ledger Variances'
+                        '</div>',
+                        unsafe_allow_html=True,
+                    )
+
+                    st.markdown(
+                        '<div class="table-caption">'
+                        'Detailed financial differences identified during reconciliation.'
+                        '</div>',
+                        unsafe_allow_html=True,
+                    )
+
+                    ledger_format = {}
+
+                    if "ERP Recorded ($)" in df_ledger.columns:
+                        ledger_format[
+                            "ERP Recorded ($)"
+                        ] = "${:,.2f}"
+
+                    if "Audit Verified ($)" in df_ledger.columns:
+                        ledger_format[
+                            "Audit Verified ($)"
+                        ] = "${:,.2f}"
+
+                    if "Variance ($)" in df_ledger.columns:
+                        ledger_format[
+                            "Variance ($)"
+                        ] = "${:,.2f}"
+
+                    if ledger_format:
+
+                        st.dataframe(
+                            df_ledger.style.format(
+                                ledger_format
+                            ),
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+
+                    else:
+
+                        st.dataframe(
+                            df_ledger,
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+
+                with tab3:
+
+                    st.markdown(
+                        '<div class="table-heading">'
+                        'Dashboard Mismatches'
+                        '</div>',
+                        unsafe_allow_html=True,
+                    )
+
+                    st.markdown(
+                        '<div class="table-caption">'
+                        'Visual differences between dashboard values and verified financial records.'
+                        '</div>',
+                        unsafe_allow_html=True,
+                    )
+
+                    dashboard_format = {}
+
+                    if (
+                        "Dashboard Displayed ($)"
+                        in df_dashboard.columns
+                    ):
+                        dashboard_format[
+                            "Dashboard Displayed ($)"
+                        ] = "${:,.2f}"
+
+                    if (
+                        "Audit Verified ($)"
+                        in df_dashboard.columns
+                    ):
+                        dashboard_format[
+                            "Audit Verified ($)"
+                        ] = "${:,.2f}"
+
+                    if dashboard_format:
+
+                        st.dataframe(
+                            df_dashboard.style.format(
+                                dashboard_format
+                            ),
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+
+                    else:
+
+                        st.dataframe(
+                            df_dashboard,
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+
+                excel_data = generate_excel_bytes(
+                    df_summary,
                     df_ledger,
-                    use_container_width=True,
-                    hide_index=True,
+                    df_dashboard,
                 )
 
-            st.markdown(
-                '<div class="table-heading">'
-                '🖥️ Dashboard Mismatches'
-                '</div>',
-                unsafe_allow_html=True,
-            )
+                st.markdown(
+                    """
+                    <div class="download-area">
 
-            st.markdown(
-                '<div class="table-caption">'
-                'Visual differences identified between dashboard values '
-                'and verified financial records.'
-                '</div>',
-                unsafe_allow_html=True,
-            )
+                        <div class="download-title">
+                            ◈ Finalyst Audit Workbook
+                        </div>
 
-            dashboard_style_format = {}
+                        <div class="download-copy">
+                            Export the complete three-tab investigation
+                            with Executive Summary, Ledger Variances,
+                            and Dashboard Mismatches.
+                        </div>
 
-            if (
-                "Dashboard Displayed ($)"
-                in df_dashboard.columns
-            ):
-                dashboard_style_format[
-                    "Dashboard Displayed ($)"
-                ] = "${:,.2f}"
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
-            if (
-                "Audit Verified ($)"
-                in df_dashboard.columns
-            ):
-                dashboard_style_format[
-                    "Audit Verified ($)"
-                ] = "${:,.2f}"
+                execution_date = "Audit"
 
-            if dashboard_style_format:
+                if (
+                    "Execution Timestamp"
+                    in df_summary.columns
+                    and not df_summary.empty
+                ):
 
-                st.dataframe(
-                    df_dashboard.style.format(
-                        dashboard_style_format
+                    timestamp_value = str(
+                        df_summary[
+                            "Execution Timestamp"
+                        ].iloc[0]
+                    )
+
+                    if len(timestamp_value) >= 10:
+                        execution_date = (
+                            timestamp_value[:10]
+                        )
+
+                st.download_button(
+                    label="📥 Download Audit Report (.xlsx)",
+                    data=excel_data,
+                    file_name=(
+                        f"Finalyst_3Tab_Audit_Report_"
+                        f"{execution_date}.xlsx"
+                    ),
+                    mime=(
+                        "application/vnd.openxmlformats-officedocument."
+                        "spreadsheetml.sheet"
                     ),
                     use_container_width=True,
-                    hide_index=True,
                 )
 
-            else:
+            except Exception as exc:
 
-                st.dataframe(
-                    df_dashboard,
-                    use_container_width=True,
-                    hide_index=True,
+                st.error(
+                    f"Finalyst could not render the audit tables: {exc}"
                 )
-
-            excel_data = generate_excel_bytes(
-                df_summary,
-                df_ledger,
-                df_dashboard,
-            )
-
-            st.markdown(
-                """
-                <div class="download-area">
-
-                    <div class="download-title">
-                        ◈ Complete Audit Workbook
-                    </div>
-
-                    <div class="download-copy">
-                        Export the complete Finalyst investigation,
-                        including executive summary, ledger variances,
-                        and dashboard mismatches.
-                    </div>
-
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-            st.download_button(
-                label="📥 Download Finalyst Audit Report (.xlsx)",
-                data=excel_data,
-                file_name="Finalyst_Audit_Report.xlsx",
-                mime=(
-                    "application/vnd.openxmlformats-officedocument."
-                    "spreadsheetml.sheet"
-                ),
-                use_container_width=True,
-            )
 
         else:
 
             st.error(
-                "Finalyst could not generate the audit tables."
+                "Finalyst could not generate the audit report."
             )
 
     else:
