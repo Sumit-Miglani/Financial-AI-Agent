@@ -36,18 +36,33 @@ def run_critic_agent(analyst_output: dict) -> dict:
     }}
     """
 
-    response = client.models.generate_content(
-        model='gemini-3.6-flash',
-        contents=[prompt],
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json"
-        )
-    )
+    # Model fallback hierarchy to prevent 503 UNAVAILABLE errors during high demand
+    candidate_models = ['gemini-2.5-flash', 'gemini-1.5-flash']
 
-    return json.loads(response.text)
+    print(" [Critic Agent] Invoking Gemini verification model...")
+    for model_id in candidate_models:
+        try:
+            response = client.models.generate_content(
+                model=model_id,
+                contents=[prompt],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json"
+                )
+            )
+            print(f" [Critic Agent] Verification completed successfully using '{model_id}'.")
+            return json.loads(response.text)
+        except Exception as e:
+            print(f" [Critic Agent] Notice: Model '{model_id}' unavailable/busy: {e}. Trying fallback model...")
+            continue
+
+    raise RuntimeError("Critic Agent failed: All fallback Gemini models are currently unavailable.")
+
 
 if __name__ == "__main__":
-    from analyst import run_analyst_agent
+    try:
+        from src.analyst import run_analyst_agent
+    except ImportError:
+        from analyst import run_analyst_agent
     
     print(" [Workflow Orchestrator] Running Analyst Agent pipeline...")
     analyst_results = run_analyst_agent("data/financial_1.csv", "data/financial_2.csv", "data/dashboard_bi.png")
