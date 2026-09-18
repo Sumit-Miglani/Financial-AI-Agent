@@ -130,6 +130,7 @@ st.html(
             transform: scale(0.96);
             opacity: 0.35;
         }
+
         50% {
             transform: scale(1.08);
             opacity: 1;
@@ -182,6 +183,7 @@ st.html(
             transform: scale(1);
             opacity: 1;
         }
+
         50% {
             transform: scale(0.68);
             opacity: 0.5;
@@ -234,6 +236,7 @@ st.html(
         from {
             transform: translateY(0);
         }
+
         to {
             transform: translateY(42px);
         }
@@ -261,15 +264,19 @@ st.html(
             top: 13%;
             opacity: 0;
         }
+
         12% {
             opacity: 1;
         }
+
         50% {
             opacity: 0.9;
         }
+
         88% {
             opacity: 0;
         }
+
         100% {
             top: 84%;
             opacity: 0;
@@ -455,6 +462,7 @@ st.html(
         from {
             transform: rotate(0deg);
         }
+
         to {
             transform: rotate(360deg);
         }
@@ -464,6 +472,7 @@ st.html(
         from {
             transform: rotate(360deg);
         }
+
         to {
             transform: rotate(0deg);
         }
@@ -473,6 +482,7 @@ st.html(
         0%,100% {
             transform: scale(0.97);
         }
+
         50% {
             transform: scale(1.045);
         }
@@ -483,6 +493,7 @@ st.html(
             transform: scale(0.82);
             opacity: 0.68;
         }
+
         100% {
             transform: scale(1.50);
             opacity: 0;
@@ -614,6 +625,7 @@ st.html(
         0%,100% {
             opacity: 0.45;
         }
+
         50% {
             opacity: 1;
         }
@@ -650,6 +662,7 @@ st.html(
         from {
             transform: translateX(0);
         }
+
         to {
             transform: translateX(64px);
         }
@@ -855,22 +868,6 @@ st.html(
         font-family: 'Space Grotesk', sans-serif;
     }
 
-    .table-heading {
-        margin-top: 18px;
-        margin-bottom: 7px;
-        color: #E5EAF0;
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    .table-caption {
-        margin-bottom: 12px;
-        color: #758091;
-        font-size: 10px;
-        line-height: 1.5;
-    }
-
     .health-card {
         min-height: 138px;
         padding: 21px;
@@ -915,21 +912,37 @@ st.html(
         line-height: 1.6;
     }
 
-    .download-area {
-        margin-top: 20px;
-        padding: 21px;
+    .table-heading {
+        margin-top: 14px;
+        margin-bottom: 6px;
+        color: #E7ECF2;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .table-caption {
+        margin-bottom: 11px;
+        color: #788494;
+        font-size: 10px;
+        line-height: 1.5;
+    }
+
+    .download-panel {
+        margin-top: 22px;
+        padding: 20px;
         border-radius: 17px;
         border: 1px solid rgba(255,255,255,0.07);
         background:
             linear-gradient(
                 145deg,
-                rgba(15,22,32,0.98),
-                rgba(10,14,20,0.98)
+                #101722,
+                #0C1118
             );
     }
 
     .download-title {
-        color: #EEF2F6;
+        color: #EDF2F7;
         font-family: 'Space Grotesk', sans-serif;
         font-size: 14px;
         font-weight: 600;
@@ -938,9 +951,56 @@ st.html(
     .download-copy {
         margin-top: 6px;
         margin-bottom: 15px;
-        color: #7F8A9A;
+        color: #7D8898;
         font-size: 11px;
         line-height: 1.6;
+    }
+
+    [data-testid="stTabs"] {
+        margin-top: 8px;
+    }
+
+    [data-testid="stTabs"] [role="tablist"] {
+        gap: 4px;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+
+    [data-testid="stTabs"] button {
+        color: #8D98A7 !important;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 10px 16px;
+    }
+
+    [data-testid="stTabs"] button[aria-selected="true"] {
+        color: #EAF0F7 !important;
+    }
+
+    [data-testid="stDataFrame"] {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    [data-testid="stDownloadButton"] > button {
+        height: 52px;
+        border-radius: 13px;
+        border: 1px solid rgba(105,190,255,0.28);
+        background:
+            linear-gradient(
+                100deg,
+                rgba(37,79,140,0.90),
+                rgba(57,111,185,0.90)
+            );
+        color: #FFFFFF;
+        font-weight: 600;
+        transition: all 0.25s ease;
+    }
+
+    [data-testid="stDownloadButton"] > button:hover {
+        transform: translateY(-2px);
+        border-color: rgba(112,204,255,0.50);
+        box-shadow:
+            0 12px 28px rgba(49,109,181,0.20);
     }
 
     .footer {
@@ -1088,7 +1148,9 @@ def render_pipeline(active_stage=None, complete=False):
         )
 
         if index < len(stages) - 1:
-            parts.append('<div class="connector"></div>')
+            parts.append(
+                '<div class="connector"></div>'
+            )
 
     parts.append("</div>")
 
@@ -1761,9 +1823,11 @@ if st.button(
                 label="Reconciliation Difference",
                 value=variance_str,
                 delta=variance_delta,
-                delta_color="inverse"
-                if total_variance < 0
-                else "normal",
+                delta_color=(
+                    "inverse"
+                    if total_variance < 0
+                    else "normal"
+                ),
             )
 
         with col_m2:
@@ -1918,7 +1982,7 @@ if st.button(
                 <span class="section-number">06</span>
                 Explainable Audit Report
                 <span class="section-note">
-                    Interactive audit workbook
+                    Interactive audit tables
                 </span>
             </div>
             """
@@ -1946,17 +2010,12 @@ if st.button(
                 with tab1:
 
                     st.markdown(
-                        '<div class="table-heading">'
-                        'Executive Summary'
-                        '</div>',
-                        unsafe_allow_html=True,
+                        "#### 📑 Audit Executive Summary"
                     )
 
-                    st.markdown(
-                        '<div class="table-caption">'
-                        'High-level summary of the Finalyst investigation.'
-                        '</div>',
-                        unsafe_allow_html=True,
+                    st.caption(
+                        "High-level summary of the Finalyst "
+                        "financial investigation."
                     )
 
                     st.dataframe(
@@ -1968,32 +2027,36 @@ if st.button(
                 with tab2:
 
                     st.markdown(
-                        '<div class="table-heading">'
-                        'Reconciled Ledger Variances'
-                        '</div>',
-                        unsafe_allow_html=True,
+                        "#### 📊 Reconciled Ledger Variances"
                     )
 
-                    st.markdown(
-                        '<div class="table-caption">'
-                        'Detailed financial differences identified during reconciliation.'
-                        '</div>',
-                        unsafe_allow_html=True,
+                    st.caption(
+                        "Detailed line-item reconciliation "
+                        "between the ERP and audit ledgers."
                     )
 
                     ledger_format = {}
 
-                    if "ERP Recorded ($)" in df_ledger.columns:
+                    if (
+                        "ERP Recorded ($)"
+                        in df_ledger.columns
+                    ):
                         ledger_format[
                             "ERP Recorded ($)"
                         ] = "${:,.2f}"
 
-                    if "Audit Verified ($)" in df_ledger.columns:
+                    if (
+                        "Audit Verified ($)"
+                        in df_ledger.columns
+                    ):
                         ledger_format[
                             "Audit Verified ($)"
                         ] = "${:,.2f}"
 
-                    if "Variance ($)" in df_ledger.columns:
+                    if (
+                        "Variance ($)"
+                        in df_ledger.columns
+                    ):
                         ledger_format[
                             "Variance ($)"
                         ] = "${:,.2f}"
@@ -2019,17 +2082,12 @@ if st.button(
                 with tab3:
 
                     st.markdown(
-                        '<div class="table-heading">'
-                        'Dashboard Mismatches'
-                        '</div>',
-                        unsafe_allow_html=True,
+                        "#### 🖥️ Dashboard Mismatches"
                     )
 
-                    st.markdown(
-                        '<div class="table-caption">'
-                        'Visual differences between dashboard values and verified financial records.'
-                        '</div>',
-                        unsafe_allow_html=True,
+                    st.caption(
+                        "Differences between visual dashboard "
+                        "values and verified financial records."
                     )
 
                     dashboard_format = {}
@@ -2068,32 +2126,19 @@ if st.button(
                             hide_index=True,
                         )
 
-                excel_data = generate_excel_bytes(
-                    df_summary,
-                    df_ledger,
-                    df_dashboard,
-                )
+                st.markdown("---")
 
                 st.markdown(
-                    """
-                    <div class="download-area">
-
-                        <div class="download-title">
-                            ◈ Finalyst Audit Workbook
-                        </div>
-
-                        <div class="download-copy">
-                            Export the complete three-tab investigation
-                            with Executive Summary, Ledger Variances,
-                            and Dashboard Mismatches.
-                        </div>
-
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
+                    "#### ◈ Finalyst Audit Exports"
                 )
 
-                execution_date = "Audit"
+                st.caption(
+                    "Export the complete audit investigation "
+                    "as a three-tab Excel workbook or individual "
+                    "CSV files."
+                )
+
+                execution_date = "report"
 
                 if (
                     "Execution Timestamp"
@@ -2112,8 +2157,14 @@ if st.button(
                             timestamp_value[:10]
                         )
 
+                excel_data = generate_excel_bytes(
+                    df_summary,
+                    df_ledger,
+                    df_dashboard,
+                )
+
                 st.download_button(
-                    label="📥 Download Audit Report (.xlsx)",
+                    label="📥 Download Full Excel Workbook (.xlsx)",
                     data=excel_data,
                     file_name=(
                         f"Finalyst_3Tab_Audit_Report_"
@@ -2125,6 +2176,66 @@ if st.button(
                     ),
                     use_container_width=True,
                 )
+
+                st.markdown(
+                    "##### 📄 Export Individual CSVs"
+                )
+
+                col_csv1, col_csv2, col_csv3 = st.columns(
+                    3,
+                    gap="medium",
+                )
+
+                with col_csv1:
+
+                    st.download_button(
+                        label="📄 Executive Summary (.csv)",
+                        data=(
+                            df_summary
+                            .to_csv(index=False)
+                            .encode("utf-8")
+                        ),
+                        file_name=(
+                            f"Finalyst_Executive_Summary_"
+                            f"{execution_date}.csv"
+                        ),
+                        mime="text/csv",
+                        use_container_width=True,
+                    )
+
+                with col_csv2:
+
+                    st.download_button(
+                        label="📄 Ledger Variances (.csv)",
+                        data=(
+                            df_ledger
+                            .to_csv(index=False)
+                            .encode("utf-8")
+                        ),
+                        file_name=(
+                            f"Finalyst_Ledger_Variances_"
+                            f"{execution_date}.csv"
+                        ),
+                        mime="text/csv",
+                        use_container_width=True,
+                    )
+
+                with col_csv3:
+
+                    st.download_button(
+                        label="📄 Dashboard Mismatches (.csv)",
+                        data=(
+                            df_dashboard
+                            .to_csv(index=False)
+                            .encode("utf-8")
+                        ),
+                        file_name=(
+                            f"Finalyst_Dashboard_Mismatches_"
+                            f"{execution_date}.csv"
+                        ),
+                        mime="text/csv",
+                        use_container_width=True,
+                    )
 
             except Exception as exc:
 
