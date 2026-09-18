@@ -5,7 +5,11 @@ import streamlit as st
 
 from src.analyst import run_analyst_agent
 from src.critic import run_critic_agent
-from src.logger import generate_xai_audit_report
+from src.logger import (
+    extract_audit_tables,
+    generate_excel_bytes,
+    generate_xai_audit_report,
+)
 
 
 st.set_page_config(
@@ -28,7 +32,7 @@ st.html(
         --panel-soft: #101721;
         --text: #F4F7FB;
         --text-soft: #B7C0CC;
-        --muted: #8F9AAA;
+        --muted: #98A3B2;
         --muted-dark: #697485;
         --blue: #63AEFF;
         --blue-bright: #7AC8FF;
@@ -98,6 +102,7 @@ st.html(
         justify-content: center;
         color: #FFFFFF;
         font-size: 18px;
+        font-weight: 700;
         background:
             radial-gradient(
                 circle at 30% 24%,
@@ -158,6 +163,7 @@ st.html(
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.13em;
+        white-space: nowrap;
     }
 
     .online-dot {
@@ -334,7 +340,7 @@ st.html(
         flex-wrap: wrap;
         gap: 9px;
         margin-top: 24px;
-        max-width: 760px;
+        max-width: 800px;
     }
 
     .chip {
@@ -351,8 +357,15 @@ st.html(
 
     .chip.gemini {
         color: #BDE5FF;
-        border-color: rgba(100,185,255,0.22);
-        background: rgba(82,153,235,0.055);
+        border-color: rgba(100,185,255,0.25);
+        background:
+            linear-gradient(
+                90deg,
+                rgba(82,153,235,0.07),
+                rgba(105,213,255,0.04)
+            );
+        box-shadow:
+            inset 0 0 20px rgba(83,159,255,0.025);
     }
 
     .intelligence {
@@ -408,6 +421,7 @@ st.html(
         border-radius: 50%;
         color: #FFFFFF;
         font-size: 28px;
+        font-weight: 700;
         background:
             radial-gradient(
                 circle at 30% 25%,
@@ -429,6 +443,12 @@ st.html(
         border-radius: 50%;
         border: 1px solid rgba(105,197,255,0.28);
         animation: corePing 3s ease-out infinite;
+    }
+
+    .core-logo {
+        position: relative;
+        z-index: 5;
+        line-height: 1;
     }
 
     @keyframes orbitA {
@@ -751,10 +771,15 @@ st.html(
         letter-spacing: 0.10em;
         text-transform: uppercase;
         padding: 0 18px;
+        text-align: center;
     }
 
     .tech-item strong {
         color: #E3EAF2;
+    }
+
+    .tech-item .positive {
+        color: #69D99B;
     }
 
     .tech-divider {
@@ -830,8 +855,24 @@ st.html(
         font-family: 'Space Grotesk', sans-serif;
     }
 
+    .table-heading {
+        margin-top: 18px;
+        margin-bottom: 10px;
+        color: #E5EAF0;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .table-caption {
+        margin-top: -2px;
+        margin-bottom: 10px;
+        color: #758091;
+        font-size: 10px;
+    }
+
     .health-card {
-        min-height: 135px;
+        min-height: 138px;
         padding: 21px;
         border-radius: 16px;
         border: 1px solid rgba(255,255,255,0.07);
@@ -841,6 +882,14 @@ st.html(
                 #101722,
                 #0C1118
             );
+        transition:
+            transform 0.25s ease,
+            border-color 0.25s ease;
+    }
+
+    .health-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(90,165,255,0.30);
     }
 
     .health-title {
@@ -866,42 +915,32 @@ st.html(
         line-height: 1.6;
     }
 
-    .report {
-        overflow: hidden;
-        border-radius: 18px;
-        border: 1px solid rgba(255,255,255,0.075);
-        background: #0D1219;
+    .download-area {
+        padding: 20px;
+        margin-top: 20px;
+        border-radius: 17px;
+        border: 1px solid rgba(255,255,255,0.07);
+        background:
+            linear-gradient(
+                145deg,
+                rgba(15,22,32,0.98),
+                rgba(10,14,20,0.98)
+            );
     }
 
-    .report-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 18px 21px;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .report-name {
-        color: #EFF3F7;
+    .download-title {
+        color: #EEF2F6;
         font-family: 'Space Grotesk', sans-serif;
         font-size: 14px;
         font-weight: 600;
     }
 
-    .report-status {
-        color: var(--green);
-        font-size: 9px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.13em;
-    }
-
-    .report-body {
-        padding: 21px;
-        color: #A7B0BD;
-        font-size: 12px;
-        line-height: 1.82;
-        white-space: pre-wrap;
+    .download-copy {
+        margin-top: 6px;
+        margin-bottom: 15px;
+        color: #7F8A9A;
+        font-size: 11px;
+        line-height: 1.6;
     }
 
     .footer {
@@ -920,11 +959,11 @@ st.html(
     }
 
     .footer-left {
-        color: #8D97A5;
+        color: #A0A9B6;
     }
 
     .footer-right {
-        color: #858F9D;
+        color: #939DAC;
     }
 
     @media (max-width: 1100px) {
@@ -946,6 +985,10 @@ st.html(
 
         .pipeline-node {
             max-width: none;
+        }
+
+        .technical-strip {
+            flex-wrap: wrap;
         }
     }
 
@@ -982,10 +1025,6 @@ st.html(
 
         .pipeline-node {
             min-width: 145px;
-        }
-
-        .technical-strip {
-            flex-wrap: wrap;
         }
 
         .tech-divider {
@@ -1063,29 +1102,33 @@ def parse_val(item, keys):
 
     for key in keys:
 
-        if key in item:
+        if key not in item:
+            continue
 
-            value = item[key]
+        value = item[key]
 
-            if value is None:
-                continue
+        if value is None:
+            continue
 
-            if isinstance(value, (int, float)):
-                return float(value)
+        if isinstance(value, (int, float)):
+            return float(value)
 
-            try:
-                cleaned = (
-                    str(value)
-                    .replace("$", "")
-                    .replace(",", "")
-                    .replace("%", "")
-                    .strip()
-                )
+        try:
 
-                return float(cleaned)
+            cleaned = (
+                str(value)
+                .replace("$", "")
+                .replace(",", "")
+                .replace("%", "")
+                .replace("(", "-")
+                .replace(")", "")
+                .strip()
+            )
 
-            except (ValueError, TypeError):
-                continue
+            return float(cleaned)
+
+        except (ValueError, TypeError):
+            continue
 
     return None
 
@@ -1117,7 +1160,10 @@ def calculate_total_variance(discrepancies):
 
         direct_variance = parse_val(
             item,
-            ["variance", "difference"],
+            [
+                "variance",
+                "difference",
+            ],
         )
 
         if direct_variance is not None:
@@ -1169,10 +1215,12 @@ def extract_confidence(critic_data):
 
     if isinstance(value, (int, float)):
 
-        if float(value) <= 1:
-            return f"{float(value) * 100:.1f}%"
+        numeric_value = float(value)
 
-        return f"{float(value):.1f}%"
+        if numeric_value <= 1:
+            return f"{numeric_value * 100:.1f}%"
+
+        return f"{numeric_value:.1f}%"
 
     return str(value)
 
@@ -1193,10 +1241,12 @@ def extract_consensus(critic_data):
 
     if isinstance(value, (int, float)):
 
-        if float(value) <= 1:
-            return f"{float(value) * 100:.1f}%"
+        numeric_value = float(value)
 
-        return f"{float(value):.1f}%"
+        if numeric_value <= 1:
+            return f"{numeric_value * 100:.1f}%"
+
+        return f"{numeric_value:.1f}%"
 
     return str(value)
 
@@ -1266,6 +1316,7 @@ st.html(
             </div>
 
             <div class="chips">
+
                 <div class="chip gemini">
                     Powered by Gemini
                 </div>
@@ -1289,6 +1340,7 @@ st.html(
                 <div class="chip">
                     Explainable AI
                 </div>
+
             </div>
 
         </div>
@@ -1300,7 +1352,7 @@ st.html(
             <div class="orbit"></div>
 
             <div class="core">
-                ✦
+                <span class="core-logo">◈</span>
             </div>
 
         </div>
@@ -1652,26 +1704,6 @@ if st.button(
             discrepancies
         )
 
-        if total_variance != 0:
-
-            if total_variance < 0:
-                variance_str = (
-                    f"-${abs(total_variance) / 1e6:,.2f}M"
-                )
-                variance_delta = "High variance"
-            else:
-                variance_str = (
-                    f"${total_variance / 1e6:,.2f}M"
-                )
-                variance_delta = "Positive variance"
-
-        else:
-
-            variance_str = (
-                f"{len(discrepancies)} Flagged"
-            )
-            variance_delta = "Ledger items"
-
         confidence = extract_confidence(
             critic_validation
         )
@@ -1679,6 +1711,32 @@ if st.button(
         consensus = extract_consensus(
             critic_validation
         )
+
+        if total_variance != 0:
+
+            if total_variance < 0:
+
+                variance_str = (
+                    f"-${abs(total_variance) / 1e6:,.2f}M"
+                )
+
+                variance_delta = "High variance"
+
+            else:
+
+                variance_str = (
+                    f"${total_variance / 1e6:,.2f}M"
+                )
+
+                variance_delta = "Positive variance"
+
+        else:
+
+            variance_str = (
+                f"{len(discrepancies)} Flagged"
+            )
+
+            variance_delta = "Ledger items"
 
         st.html(
             """
@@ -1732,8 +1790,8 @@ if st.button(
 
                 <div class="tech-item">
                     <strong>Evidence Grounding</strong>
-                    <span style="color:#69D99B;">
-                        &nbsp;100%&nbsp;
+                    <span class="positive">
+                        &nbsp;100%
                     </span>
                 </div>
 
@@ -1741,8 +1799,8 @@ if st.button(
 
                 <div class="tech-item">
                     <strong>Audit Status</strong>
-                    <span style="color:#69D99B;">
-                        &nbsp;VERIFIED&nbsp;
+                    <span class="positive">
+                        &nbsp;VERIFIED
                     </span>
                 </div>
 
@@ -1750,8 +1808,8 @@ if st.button(
 
                 <div class="tech-item">
                     <strong>Agent Consensus</strong>
-                    <span style="color:#69D99B;">
-                        &nbsp;{consensus}&nbsp;
+                    <span class="positive">
+                        &nbsp;{consensus}
                     </span>
                 </div>
 
@@ -1759,8 +1817,8 @@ if st.button(
 
                 <div class="tech-item">
                     <strong>Knowledge Context</strong>
-                    <span style="color:#69D99B;">
-                        &nbsp;GROUNDED&nbsp;
+                    <span class="positive">
+                        &nbsp;GROUNDED
                     </span>
                 </div>
 
@@ -1772,71 +1830,279 @@ if st.button(
             """
             <div class="section-title">
                 <span class="section-number">05</span>
-                Finalyst Explanation & Audit Trail
+                System Health
                 <span class="section-note">
-                    Explainable output
+                    Intelligence stack
                 </span>
             </div>
             """
         )
 
-        if os.path.exists(report_path):
+        health1, health2, health3 = st.columns(
+            3,
+            gap="medium",
+        )
 
-            with open(
-                report_path,
-                "r",
-                encoding="utf-8",
-            ) as f:
-
-                report_content = f.read()
-
-        if report_content:
-
-            escaped_report = (
-                str(report_content)
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-            )
+        with health1:
 
             st.html(
-                f"""
-                <div class="report">
+                """
+                <div class="health-card">
 
-                    <div class="report-head">
-
-                        <div class="report-name">
-                            ◈ Finalyst Investigation Report
-                        </div>
-
-                        <div class="report-status">
-                            Report Ready
-                        </div>
-
+                    <div class="health-title">
+                        Multimodal Vision
                     </div>
 
-                    <div class="report-body">
-{escaped_report}
+                    <div class="health-status">
+                        ● Active
+                    </div>
+
+                    <div class="health-copy">
+                        Dashboard evidence is processed alongside
+                        structured financial data.
                     </div>
 
                 </div>
                 """
             )
 
-            st.write("")
+        with health2:
+
+            st.html(
+                """
+                <div class="health-card">
+
+                    <div class="health-title">
+                        Knowledge Retrieval
+                    </div>
+
+                    <div class="health-status">
+                        ● Grounded
+                    </div>
+
+                    <div class="health-copy">
+                        Relevant accounting context supports
+                        the reasoning process.
+                    </div>
+
+                </div>
+                """
+            )
+
+        with health3:
+
+            st.html(
+                """
+                <div class="health-card">
+
+                    <div class="health-title">
+                        Independent Verification
+                    </div>
+
+                    <div class="health-status">
+                        ● Passed
+                    </div>
+
+                    <div class="health-copy">
+                        A separate critic agent challenges
+                        the generated conclusions.
+                    </div>
+
+                </div>
+                """
+            )
+
+        st.html(
+            """
+            <div class="section-title">
+                <span class="section-number">06</span>
+                Explainable Audit Report
+                <span class="section-note">
+                    Interactive financial tables
+                </span>
+            </div>
+            """
+        )
+
+        try:
+
+            df_summary, df_ledger, df_dashboard = (
+                extract_audit_tables(
+                    analyst_findings,
+                    critic_validation,
+                )
+            )
+
+        except Exception as exc:
+
+            st.error(
+                f"Finalyst could not extract the audit tables: {exc}"
+            )
+
+            df_summary = None
+            df_ledger = None
+            df_dashboard = None
+
+        if (
+            df_summary is not None
+            and df_ledger is not None
+            and df_dashboard is not None
+        ):
+
+            st.markdown(
+                '<div class="table-heading">'
+                '📑 Audit Executive Summary'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+
+            st.markdown(
+                '<div class="table-caption">'
+                'A structured overview of the completed investigation.'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+
+            st.dataframe(
+                df_summary,
+                use_container_width=True,
+                hide_index=True,
+            )
+
+            st.markdown(
+                '<div class="table-heading">'
+                '📊 Reconciled Ledger Variances'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+
+            st.markdown(
+                '<div class="table-caption">'
+                'Transaction-level differences identified during reconciliation.'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+
+            ledger_style_format = {}
+
+            if "ERP Recorded ($)" in df_ledger.columns:
+                ledger_style_format["ERP Recorded ($)"] = "${:,.2f}"
+
+            if "Audit Verified ($)" in df_ledger.columns:
+                ledger_style_format["Audit Verified ($)"] = "${:,.2f}"
+
+            if "Variance ($)" in df_ledger.columns:
+                ledger_style_format["Variance ($)"] = "${:,.2f}"
+
+            if ledger_style_format:
+
+                st.dataframe(
+                    df_ledger.style.format(
+                        ledger_style_format
+                    ),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+            else:
+
+                st.dataframe(
+                    df_ledger,
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+            st.markdown(
+                '<div class="table-heading">'
+                '🖥️ Dashboard Mismatches'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+
+            st.markdown(
+                '<div class="table-caption">'
+                'Visual differences identified between dashboard values '
+                'and verified financial records.'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+
+            dashboard_style_format = {}
+
+            if (
+                "Dashboard Displayed ($)"
+                in df_dashboard.columns
+            ):
+                dashboard_style_format[
+                    "Dashboard Displayed ($)"
+                ] = "${:,.2f}"
+
+            if (
+                "Audit Verified ($)"
+                in df_dashboard.columns
+            ):
+                dashboard_style_format[
+                    "Audit Verified ($)"
+                ] = "${:,.2f}"
+
+            if dashboard_style_format:
+
+                st.dataframe(
+                    df_dashboard.style.format(
+                        dashboard_style_format
+                    ),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+            else:
+
+                st.dataframe(
+                    df_dashboard,
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+            excel_data = generate_excel_bytes(
+                df_summary,
+                df_ledger,
+                df_dashboard,
+            )
+
+            st.markdown(
+                """
+                <div class="download-area">
+
+                    <div class="download-title">
+                        ◈ Complete Audit Workbook
+                    </div>
+
+                    <div class="download-copy">
+                        Export the complete Finalyst investigation,
+                        including executive summary, ledger variances,
+                        and dashboard mismatches.
+                    </div>
+
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
             st.download_button(
-                label="⬇ Download XAI Audit Trail",
-                data=str(report_content),
-                file_name="Finalyst_XAI_Audit_Report.md",
-                mime="text/markdown",
+                label="📥 Download Finalyst Audit Report (.xlsx)",
+                data=excel_data,
+                file_name="Finalyst_Audit_Report.xlsx",
+                mime=(
+                    "application/vnd.openxmlformats-officedocument."
+                    "spreadsheetml.sheet"
+                ),
                 use_container_width=True,
             )
 
         else:
 
             st.error(
-                "Finalyst could not generate the audit report."
+                "Finalyst could not generate the audit tables."
             )
 
     else:
