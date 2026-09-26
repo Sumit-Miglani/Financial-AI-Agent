@@ -47,4 +47,4 @@ Open your browser at http://localhost:8501 or use Cloud Shell Web Preview to acc
 Sumit <br/>
 Senior Analyst | AI Engineering Specialist <br/>
 Email: sumit.miglaniwork@gmail.com <br/>
-Profiles: [LinkedIn](https://www.linkedin.com/in/sumit-miglani/) | [[Google Scholar]([url](https://scholar.google.com/citations?user=p3_o-uwAAAAJ&hl=en))]
+Profiles: [LinkedIn](https://www.linkedin.com/in/sumit-miglani/) | [Google Scholar](https://scholar.google.com/citations?user=p3_o-uwAAAAJ&hl=en)
