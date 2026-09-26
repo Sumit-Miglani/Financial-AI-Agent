@@ -8,7 +8,7 @@
 
 **System Architecture** <br/>
 
-<img width="2702" height="356" alt="image" src="https://github.com/user-attachments/assets/7bc41098-c6ec-4fce-a589-860f0fde6077" />
+<img width="2702" height="356" alt="image" src="https://github.com/user-attachments/assets/7bc41098-c6ec-4fce-a589-860f0fde6077" /> <br/>
 
 **Key Technical Features <br/>
 👁️ Multimodal Vision Extraction** <br/>
