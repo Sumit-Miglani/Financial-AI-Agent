@@ -2,6 +2,8 @@
 
 <img width="2708" height="1360" alt="image" src="https://github.com/user-attachments/assets/4a8a5b3c-04bf-4af4-afc5-b7b02c8b1cdf" />
 
+
+
 **Executive Summary** <br/>
 - Manual financial reconciliation across heterogeneous enterprise systems (BI reports, PDF ledgers, ERP exports) is slow, error-prone, and labor-intensive. Standard LLM approaches suffer from hallucinations and API rate-limiting under heavy data loads. <br/>
 - Finalyst solves this by uniting Multimodal Gemini Vision Capabilities, a Retrieval-Augmented Generation (RAG) vector pipeline, and a Dual-Agent Consensus Engine. It reduces enterprise audit cycles from days to seconds while maintaining deterministic precision. <br/>
@@ -41,8 +43,8 @@ Open your browser at http://localhost:8501 or use Cloud Shell Web Preview to acc
 - **Accuracy:** 100% variance detection rate on simulated $50M internal ledger discrepancies.\n
 - **API Reliability:** Achieved 99.9% pipeline completion rate during synthetic 503 capacity spikes via dynamic model failover logic. <br/>
 
-👤 Author
-Sumit
+👤 Author <br/>
+Sumit <br/>
 Senior Analyst | AI Engineering Specialist <br/>
 Email: sumit.miglaniwork@gmail.com <br/>
-Profiles: [LinkedIn](https://www.linkedin.com/in/sumit-miglani/) | [Google Scholar]([url](https://scholar.google.com/citations?user=p3_o-uwAAAAJ&hl=en))
+Profiles: [LinkedIn](https://www.linkedin.com/in/sumit-miglani/) | [[Google Scholar]([url](https://scholar.google.com/citations?user=p3_o-uwAAAAJ&hl=en))]
